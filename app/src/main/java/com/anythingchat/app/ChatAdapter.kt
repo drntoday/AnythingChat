@@ -21,11 +21,6 @@ class ChatAdapter(private val messages: MutableList<ChatMessage>) :
     
     override fun getItemCount(): Int = messages.size
     
-    fun addMessage(message: ChatMessage) {
-        messages.add(message)
-        notifyItemInserted(messages.size - 1)
-    }
-    
     inner class MessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val messageText: TextView = itemView.findViewById(R.id.messageText)
         
@@ -33,10 +28,10 @@ class ChatAdapter(private val messages: MutableList<ChatMessage>) :
             messageText.text = message.text
             if (message.isUser) {
                 messageText.setBackgroundResource(android.R.drawable.dialog_holo_light_frame)
-                messageText.setPadding(32, 16, 16, 16)
+                messageText.setPadding(60, 20, 20, 20)
             } else {
                 messageText.setBackgroundResource(android.R.drawable.dialog_holo_dark_frame)
-                messageText.setPadding(16, 16, 32, 16)
+                messageText.setPadding(20, 20, 60, 20)
             }
         }
     }
