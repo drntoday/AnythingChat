@@ -12,6 +12,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
+// Define ChatMessage data class here
+data class ChatMessage(val text: String, val isUser: Boolean)
+
 class MainActivity : AppCompatActivity() {
     
     private lateinit var recyclerView: RecyclerView
