@@ -1,14 +1,18 @@
 package com.anythingchat.app
 
-import android.widget.TextView
-import android.view.ViewGroup
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 
 data class ChatMessage(val text: String, val isUser: Boolean)
 
@@ -17,6 +21,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var inputField: EditText
     private lateinit var sendButton: Button
+    private lateinit var modelManager: ModelManager
+    
     private val messages = mutableListOf<ChatMessage>()
     
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,21 +35,61 @@ class MainActivity : AppCompatActivity() {
         
         recyclerView.layoutManager = LinearLayoutManager(this)
         
+        modelManager = ModelManager(this)
+        
+        // Check if model exists
+        val modelPath = File(filesDir, "model/qwen_1.5b_4bit.bin")
+        if (!modelPath.exists()) {
+            startActivity(android.content.Intent(this, SetupActivity::class.java))
+            finish()
+            return
+        }
+        
+        // Load model in background
+        lifecycleScope.launch(Dispatchers.IO) {
+            val success = modelManager.loadModel()
+            withContext(Dispatchers.Main) {
+                if (success) {
+                    Toast.makeText(this@MainActivity, "Model loaded!", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Failed to load model", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+        
         sendButton.setOnClickListener {
             val input = inputField.text.toString().trim()
             if (input.isNotEmpty()) {
-                // Add user message
-                messages.add(ChatMessage(input, true))
-                // Echo response (no AI yet)
-                messages.add(ChatMessage("You said: $input", false))
-                updateUI()
-                inputField.text?.clear()
+                sendMessage(input)
             }
         }
     }
     
+    private fun sendMessage(input: String) {
+        // Add user message
+        messages.add(ChatMessage(input, true))
+        updateUI()
+        inputField.text?.clear()
+        
+        // Add loading message
+        messages.add(ChatMessage("Thinking...", false))
+        updateUI()
+        
+        lifecycleScope.launch {
+            val fullPrompt = "You are a helpful AI assistant. Answer concisely.\n\nUser: $input\n\nAssistant:"
+            
+            val response = withContext(Dispatchers.IO) {
+                modelManager.generateResponse(fullPrompt)
+            }
+            
+            // Remove loading message and add real response
+            messages.removeAt(messages.size - 1)
+            messages.add(ChatMessage(response, false))
+            updateUI()
+        }
+    }
+    
     private fun updateUI() {
-        // Simple adapter inline (no separate file)
         recyclerView.adapter = object : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
                 val tv = TextView(parent.context)
@@ -55,7 +101,7 @@ class MainActivity : AppCompatActivity() {
             override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
                 val tv = holder.itemView as TextView
                 val msg = messages[position]
-                tv.text = if (msg.isUser) "You: ${msg.text}" else "Bot: ${msg.text}"
+                tv.text = if (msg.isUser) "You: ${msg.text}" else "AI: ${msg.text}"
             }
             
             override fun getItemCount(): Int = messages.size
