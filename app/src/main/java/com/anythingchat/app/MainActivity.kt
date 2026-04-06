@@ -6,10 +6,14 @@ import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.view.ViewGroup
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
 
 data class ChatMessage(val text: String, val isUser: Boolean)
 
@@ -18,28 +22,44 @@ class MainActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var inputField: EditText
     private lateinit var sendButton: Button
+    private lateinit var modelManager: ModelManager
+    
     private val messages = mutableListOf<ChatMessage>()
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
         
-        try {
-            setContentView(R.layout.activity_main)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Layout error: ${e.message}", Toast.LENGTH_LONG).show()
-            return
-        }
-        
-        try {
-            recyclerView = findViewById(R.id.recyclerView)
-            inputField = findViewById(R.id.inputField)
-            sendButton = findViewById(R.id.sendButton)
-        } catch (e: Exception) {
-            Toast.makeText(this, "View error: ${e.message}", Toast.LENGTH_LONG).show()
-            return
-        }
+        recyclerView = findViewById(R.id.recyclerView)
+        inputField = findViewById(R.id.inputField)
+        sendButton = findViewById(R.id.sendButton)
         
         recyclerView.layoutManager = LinearLayoutManager(this)
+        
+        modelManager = ModelManager(this)
+        
+        // Check if model exists
+        val modelPath = File(filesDir, "model/qwen_1.5b_4bit.bin")
+        if (!modelPath.exists()) {
+            Toast.makeText(this, "Model not found. Please run Setup first.", Toast.LENGTH_LONG).show()
+            startActivity(android.content.Intent(this, SetupActivity::class.java))
+            finish()
+            return
+        }
+        
+        // Load model in background
+        lifecycleScope.launch(Dispatchers.IO) {
+            val success = modelManager.loadModel()
+            withContext(Dispatchers.Main) {
+                if (success) {
+                    Toast.makeText(this@MainActivity, "AI Model Loaded! Ready to chat.", Toast.LENGTH_SHORT).show()
+                    messages.add(ChatMessage("AnythingChat is ready! I'm running completely offline on your phone. Ask me anything.", false))
+                    updateUI()
+                } else {
+                    Toast.makeText(this@MainActivity, "Failed to load model. Please reinstall.", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
         
         sendButton.setOnClickListener {
             val input = inputField.text.toString().trim()
@@ -47,10 +67,6 @@ class MainActivity : AppCompatActivity() {
                 sendMessage(input)
             }
         }
-        
-        // Add welcome message
-        messages.add(ChatMessage("AnythingChat is ready! (Mock AI mode - MediaPipe disabled)", false))
-        updateUI()
     }
     
     private fun sendMessage(input: String) {
@@ -59,17 +75,20 @@ class MainActivity : AppCompatActivity() {
         updateUI()
         inputField.text?.clear()
         
-        // Add typing indicator
-        messages.add(ChatMessage("...", false))
+        // Add thinking indicator
+        messages.add(ChatMessage("🤔 Thinking...", false))
         updateUI()
         
-        // Simulate AI response (no actual AI)
-        CoroutineScope(Dispatchers.Main).launch {
-            delay(2000) // Simulate thinking time
-            // Remove typing indicator
+        lifecycleScope.launch {
+            val fullPrompt = "You are AnythingChat, a helpful AI assistant. Answer concisely and directly.\n\nUser: $input\n\nAssistant:"
+            
+            val response = withContext(Dispatchers.IO) {
+                modelManager.generateResponse(fullPrompt)
+            }
+            
+            // Remove thinking indicator and add real response
             messages.removeAt(messages.size - 1)
-            // Add mock response
-            messages.add(ChatMessage("This is a mock response. Real AI would answer: '$input'", false))
+            messages.add(ChatMessage(response, false))
             updateUI()
         }
     }
@@ -80,14 +99,13 @@ class MainActivity : AppCompatActivity() {
                 val tv = TextView(parent.context)
                 tv.setPadding(50, 20, 50, 20)
                 tv.textSize = 16f
-                tv.setBackgroundColor(0x222222)
                 return object : RecyclerView.ViewHolder(tv) {}
             }
             
             override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
                 val tv = holder.itemView as TextView
                 val msg = messages[position]
-                tv.text = if (msg.isUser) "You: ${msg.text}" else "AI: ${msg.text}"
+                tv.text = if (msg.isUser) "👤 You: ${msg.text}" else "🤖 AI: ${msg.text}"
                 if (msg.isUser) {
                     tv.setBackgroundColor(0x224466)
                 } else {
