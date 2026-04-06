@@ -4,32 +4,38 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="32dp">
+    android:padding="32dp"
+    android:background="#121212">
     
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="AnythingChat Setup"
         android:textSize="24sp"
+        android:textColor="#FFFFFF"
         android:layout_marginBottom="32dp"/>
     
     <TextView
         android:id="@+id/statusText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Download AI model (1.6GB) to start"
-        android:layout_marginBottom="24dp"/>
+        android:text="Download AI model (700MB) to start"
+        android:textColor="#CCCCCC"
+        android:layout_marginBottom="24dp"
+        android:gravity="center"/>
     
     <ProgressBar
         android:id="@+id/progressBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:indeterminate="true"
         android:visibility="gone"/>
     
     <Button
         android:id="@+id/downloadButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Download Model"/>
+        android:text="Download Model (WiFi only)"
+        android:backgroundTint="#4CAF50"/>
     
 </LinearLayout>
