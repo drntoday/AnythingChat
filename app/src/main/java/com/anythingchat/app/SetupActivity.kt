@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.ProgressBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import java.io.File
 
@@ -22,11 +23,24 @@ class SetupActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_setup)
         
-        progressBar = findViewById(R.id.progressBar)
-        statusText = findViewById(R.id.statusText)
-        downloadButton = findViewById(R.id.downloadButton)
+        try {
+            setContentView(R.layout.activity_setup)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Setup layout error: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+        
+        try {
+            progressBar = findViewById(R.id.progressBar)
+            statusText = findViewById(R.id.statusText)
+            downloadButton = findViewById(R.id.downloadButton)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Setup view error: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
         
         downloadButton.setOnClickListener {
             startDownload()
