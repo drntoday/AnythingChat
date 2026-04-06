@@ -16,7 +16,6 @@ class ModelManager(private val context: Context) {
             .setMaxTokens(512)
             .setTemperature(0.8f)
             .setTopK(40)
-            .setNumThreads(4)
             .build()
         
         llmInference = LlmInference.createFromOptions(context, options)
