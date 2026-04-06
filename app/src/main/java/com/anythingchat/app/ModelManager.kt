@@ -2,7 +2,6 @@ package com.anythingchat.app
 
 import android.content.Context
 import com.google.mediapipe.tasks.genai.llminference.LlmInference
-import com.google.mediapipe.tasks.genai.llminference.LlmInferenceOptions
 import java.io.File
 
 class ModelManager(private val context: Context) {
@@ -12,7 +11,7 @@ class ModelManager(private val context: Context) {
     fun loadModel() {
         val modelPath = File(context.filesDir, "model/qwen_1.5b_4bit.bin").absolutePath
         
-        val options = LlmInferenceOptions.builder()
+        val options = LlmInference.LlmInferenceOptions.builder()
             .setModelPath(modelPath)
             .setMaxTokens(512)
             .setTemperature(0.8f)
