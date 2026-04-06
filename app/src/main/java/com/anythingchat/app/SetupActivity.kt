@@ -8,6 +8,7 @@ import android.content.IntentFilter
 import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -16,45 +17,47 @@ import java.io.File
 
 class SetupActivity : AppCompatActivity() {
     
-    private lateinit var progressBar: ProgressBar
     private lateinit var statusText: TextView
     private lateinit var downloadButton: Button
+    private lateinit var progressBar: ProgressBar
     private var downloadId: Long = -1
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        try {
-            setContentView(R.layout.activity_setup)
-        } catch (e: Exception) {
-            Toast.makeText(this, "Layout error: ${e.message}", Toast.LENGTH_LONG).show()
-            finish()
-            return
+        // Create UI programmatically (no XML file needed)
+        val layout = LinearLayout(this)
+        layout.orientation = LinearLayout.VERTICAL
+        layout.setPadding(50, 50, 50, 50)
+        
+        statusText = TextView(this)
+        statusText.text = "Download AI model to start"
+        statusText.textSize = 18f
+        statusText.setPadding(0, 0, 0, 50)
+        
+        progressBar = ProgressBar(this)
+        progressBar.visibility = ProgressBar.GONE
+        progressBar.setPadding(0, 0, 0, 50)
+        
+        downloadButton = Button(this)
+        downloadButton.text = "Download Model (700MB)"
+        downloadButton.setOnClickListener {
+            startDownload()
         }
         
-        try {
-            progressBar = findViewById(R.id.progressBar)
-            statusText = findViewById(R.id.statusText)
-            downloadButton = findViewById(R.id.downloadButton)
-        } catch (e: Exception) {
-            Toast.makeText(this, "View error: ${e.message}", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
+        layout.addView(statusText)
+        layout.addView(progressBar)
+        layout.addView(downloadButton)
+        
+        setContentView(layout)
         
         // Check if model already exists
-        val modelDir = File(filesDir, "model")
-        val modelFile = File(modelDir, "qwen_1.5b_4bit.bin")
-        
+        val modelFile = File(filesDir, "model/qwen_1.5b_4bit.bin")
         if (modelFile.exists()) {
-            statusText.text = "Model already downloaded! Starting chat..."
+            statusText.text = "Model found! Starting chat..."
             startActivity(Intent(this, MainActivity::class.java))
             finish()
             return
-        }
-        
-        downloadButton.setOnClickListener {
-            startDownload()
         }
         
         // Register receiver for download completion
@@ -63,7 +66,7 @@ class SetupActivity : AppCompatActivity() {
                 val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: -1
                 if (id == downloadId) {
                     statusText.text = "Download complete! Starting chat..."
-                    Toast.makeText(this@SetupActivity, "Model downloaded! Starting chat...", Toast.LENGTH_LONG).show()
+                    Toast.makeText(this@SetupActivity, "Model downloaded!", Toast.LENGTH_LONG).show()
                     startActivity(Intent(this@SetupActivity, MainActivity::class.java))
                     finish()
                 }
@@ -74,7 +77,6 @@ class SetupActivity : AppCompatActivity() {
     }
     
     private fun startDownload() {
-        // Using a smaller, more reliable model (TinyLlama 1.1B instead of Qwen 1.5B)
         val modelUrl = "https://huggingface.co/TheBloke/TinyLlama-1.1B-Chat-v1.0-GGUF/resolve/main/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf"
         
         val modelDir = File(filesDir, "model")
@@ -85,19 +87,19 @@ class SetupActivity : AppCompatActivity() {
         val destinationFile = File(modelDir, "qwen_1.5b_4bit.bin")
         
         val request = DownloadManager.Request(Uri.parse(modelUrl))
-            .setTitle("Download AI Model (TinyLlama 1.1B)")
-            .setDescription("Approximately 700MB - Please wait")
+            .setTitle("Download AI Model")
+            .setDescription("TinyLlama 1.1B - 700MB")
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
             .setDestinationUri(Uri.fromFile(destinationFile))
-            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI)
+            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
         
         val manager = getSystemService(DOWNLOAD_SERVICE) as DownloadManager
         downloadId = manager.enqueue(request)
         
         downloadButton.isEnabled = false
-        statusText.text = "Downloading 700MB model... (WiFi only)"
+        statusText.text = "Downloading... 700MB (Check notification)"
         progressBar.visibility = ProgressBar.VISIBLE
         
-        Toast.makeText(this, "Download started. Please wait for completion notification.", Toast.LENGTH_LONG).show()
+        Toast.makeText(this, "Download started. Check notification for progress.", Toast.LENGTH_LONG).show()
     }
 }
