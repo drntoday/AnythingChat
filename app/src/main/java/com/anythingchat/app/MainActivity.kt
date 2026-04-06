@@ -1,8 +1,8 @@
 package com.anythingchat.app
 
 import android.os.Bundle
+import android.widget.Button
 import android.widget.EditText
-import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     
     private lateinit var recyclerView: RecyclerView
     private lateinit var inputField: EditText
-    private lateinit var sendButton: ImageButton
+    private lateinit var sendButton: Button
     private lateinit var chatAdapter: ChatAdapter
     private lateinit var modelManager: ModelManager
     private lateinit var searchHelper: SearchHelper
@@ -27,8 +27,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         
-        setupViews()
-        setupRecyclerView()
+        recyclerView = findViewById(R.id.recyclerView)
+        inputField = findViewById(R.id.inputField)
+        sendButton = findViewById(R.id.sendButton)
+        
+        chatAdapter = ChatAdapter(messages)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = chatAdapter
         
         searchHelper = SearchHelper()
         modelManager = ModelManager(this)
@@ -51,18 +56,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
     
-    private fun setupViews() {
-        recyclerView = findViewById(R.id.recyclerView)
-        inputField = findViewById(R.id.inputField)
-        sendButton = findViewById(R.id.sendButton)
-    }
-    
-    private fun setupRecyclerView() {
-        chatAdapter = ChatAdapter(messages)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        recyclerView.adapter = chatAdapter
-    }
-    
     private fun loadModel() {
         lifecycleScope.launch(Dispatchers.IO) {
             modelManager.loadModel()
@@ -71,7 +64,8 @@ class MainActivity : AppCompatActivity() {
     
     private fun sendMessage(input: String) {
         // Add user message
-        chatAdapter.addMessage(ChatMessage(input, true))
+        messages.add(ChatMessage(input, true))
+        chatAdapter.notifyItemInserted(messages.size - 1)
         inputField.text?.clear()
         recyclerView.scrollToPosition(messages.size - 1)
         
@@ -95,7 +89,8 @@ class MainActivity : AppCompatActivity() {
                 modelManager.generateResponse(fullPrompt)
             }
             
-            chatAdapter.addMessage(ChatMessage(response, false))
+            messages.add(ChatMessage(response, false))
+            chatAdapter.notifyItemInserted(messages.size - 1)
             recyclerView.scrollToPosition(messages.size - 1)
         }
     }
