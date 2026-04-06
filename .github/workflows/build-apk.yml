@@ -20,11 +20,6 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x gradlew
     
-    - name: Download Gradle Wrapper JAR
-      run: |
-        mkdir -p gradle/wrapper
-        curl -L -o gradle/wrapper/gradle-wrapper.jar https://github.com/gradle/gradle/raw/v8.2.0/gradle/wrapper/gradle-wrapper.jar
-    
     - name: Build Debug APK
       run: ./gradlew assembleDebug --no-daemon
     
