@@ -1,47 +1,27 @@
-#!/bin/bash
+#!/bin/sh
 
-##############################################################################
-##  Gradle start up script for UNIX
-##############################################################################
+# Gradle wrapper script for Android builds
 
-APP_NAME="Gradle"
-APP_BASE_NAME=`basename "$0"`
-
-# Add default JVM options here
-DEFAULT_JVM_OPTS='"-Xmx1024m" "-Xms256m"'
-
-# Use the maximum available file descriptors
-MAX_FD_LIMIT=`ulimit -H -n`
-if [ $? -eq 0 ] ; then
-    MAX_FD=`ulimit -n`
-    if [ $MAX_FD = "maximum" -o $MAX_FD = "max" ] ; then
-        MAX_FD="$MAX_FD_LIMIT"
-    fi
-    ulimit -n $MAX_FD
-    if [ $? -ne 0 ] ; then
-        warn "Could not set maximum file descriptor limit: $MAX_FD"
-    fi
-else
-    warn "Could not query maximum file descriptor limit: $MAX_FD_LIMIT"
-fi
-
-# Find the Java command
+# Find Java
 if [ -n "$JAVA_HOME" ] ; then
-    JAVA_CMD="$JAVA_HOME/bin/java"
+    JAVA="$JAVA_HOME/bin/java"
 else
-    JAVA_CMD="java"
+    JAVA="java"
 fi
 
-# Locate the gradle wrapper jar
-SCRIPT_DIR=`dirname "$0"`
-WRAPPER_JAR="$SCRIPT_DIR/gradle/wrapper/gradle-wrapper.jar"
-if [ ! -f "$WRAPPER_JAR" ] ; then
-    echo "ERROR: gradle-wrapper.jar not found!"
-    exit 1
+# Set JVM options
+JVM_OPTS="-Xmx1024m -Xms256m"
+
+# Find the wrapper jar
+DIR=$(cd "$(dirname "$0")" && pwd)
+WRAPPER_JAR="$DIR/gradle/wrapper/gradle-wrapper.jar"
+
+# Check if wrapper jar exists
+if [ ! -f "$WRAPPER_JAR" ]; then
+    echo "gradle-wrapper.jar not found. Downloading..."
+    mkdir -p "$DIR/gradle/wrapper"
+    curl -L -o "$WRAPPER_JAR" https://github.com/gradle/gradle/raw/v8.2.0/gradle/wrapper/gradle-wrapper.jar
 fi
 
-# Execute Gradle
-exec "$JAVA_CMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS \
-    -classpath "$WRAPPER_JAR" \
-    org.gradle.wrapper.GradleWrapperMain \
-    "$@"
+# Run Gradle
+exec "$JAVA" $JVM_OPTS -cp "$WRAPPER_JAR" org.gradle.wrapper.GradleWrapperMain "$@"
