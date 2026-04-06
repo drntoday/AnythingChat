@@ -1,5 +1,6 @@
 package com.anythingchat.app
 
+import android.view.ViewGroup
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
