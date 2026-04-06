@@ -19,7 +19,9 @@
             </intent-filter>
         </activity>
         
-        <activity android:name=".SetupActivity" />
+        <activity
+            android:name=".SetupActivity"
+            android:exported="false" />
         
     </application>
     
