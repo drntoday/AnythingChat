@@ -49,6 +49,12 @@ dependencies {
     // MediaPipe for local LLM
     implementation("com.google.mediapipe:tasks-genai:0.10.14")
     
-    // Coroutines for background tasks
+    // Networking for DuckDuckGo
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    
+    // Lifecycle
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
 }
