@@ -50,7 +50,9 @@ class SetupActivity : AppCompatActivity() {
         val modelUrl = "https://huggingface.co/huihui-ai/Qwen2.5-1.5B-Instruct-abliterated-GGUF/resolve/main/qwen2.5-1.5b-instruct-abliterated-q4_k_m.gguf?download=1"
         
         val modelDir = File(filesDir, "model")
-        if (!modelDir.exists()) modelDir.mkdirs()
+        if (!modelDir.exists()) {
+            modelDir.mkdirs()
+        }
         
         val request = DownloadManager.Request(Uri.parse(modelUrl))
             .setTitle("Downloading AnythingChat AI Model")
@@ -64,7 +66,6 @@ class SetupActivity : AppCompatActivity() {
         
         downloadButton.isEnabled = false
         statusText.text = "Downloading... (1.6GB over WiFi)"
-        progressBar.isIndeterminate = true
-        progressBar.visibility = android.view.View.VISIBLE
+        progressBar.visibility = ProgressBar.VISIBLE
     }
 }
